@@ -58,11 +58,24 @@ function readCsv(path: string): Row[] {
 }
 
 // ---------- 0. กันรันซ้ำ ----------
-const { data: existing, error: e0 } = DRY ? { data: [], error: null } : await db.from("store").select("id").eq("code", demo.stores[0].code);
-if (e0) throw new Error(e0.message);
-if (existing!.length) {
+// ทำต่อได้เฉพาะกรณีรอบก่อนล้มหลังสร้าง Master (ผู้ใช้ ร้าน SKU) แต่ก่อนบาร์โค้ด — ยังไม่มี Ledger ใดถูกเขียน
+async function count(table: string): Promise<number> {
+  if (DRY) return 0;
+  const { count: n, error } = await db.from(table).select("id", { count: "exact", head: true });
+  if (error) throw new Error(`${table}: ${error.message}`);
+  return n ?? 0;
+}
+const RESUME = (await count("store")) > 0;
+if (RESUME && ((await count("barcode")) > 0 || (await count("stock_movement")) > 0 || !existsSync(CRED_FILE))) {
   console.log("มีข้อมูลเดโมอยู่แล้ว — หยุด (Ledger ลบไม่ได้ ห้าม seed ซ้ำ)");
   process.exit(1);
+}
+if (RESUME) console.log("ทำต่อจากรอบก่อน (ใช้ผู้ใช้ ร้าน SKU ที่สร้างไว้แล้ว)");
+
+async function idsByCode(table: string, codeCol: string): Promise<Record<string, string>> {
+  const { data, error } = await db.from(table).select(`id, ${codeCol}`);
+  if (error) throw new Error(`${table}: ${error.message}`);
+  return Object.fromEntries((data as unknown as Row[]).map((r) => [String(r[codeCol]), String(r.id)]));
 }
 
 // ---------- 1. บัญชีผู้ใช้ (Supabase Auth) ----------
@@ -83,6 +96,17 @@ async function ensureAuthUser(email: string, password: string): Promise<string> 
 
 const userId: Record<string, string> = {};
 const appUsers: Row[] = [];
+if (RESUME) {
+  const saved: Cred[] = JSON.parse(readFileSync(CRED_FILE, "utf8"));
+  const { data: list } = await db.auth.admin.listUsers({ perPage: 1000 });
+  const byAuth = await idsByCode("app_user", "auth_user_id");
+  for (const c of saved) {
+    const authId = list?.users.find((u) => u.email === c.email)?.id;
+    if (!authId || !byAuth[authId]) throw new Error(`ไม่พบผู้ใช้เดิม ${c.email}`);
+    userId[c.key] = byAuth[authId];
+    creds.push(c);
+  }
+} else {
 for (const s of demo.staff) {
   const email = staffEmail(s.key);
   const password = randomBytes(12).toString("base64url");
@@ -101,20 +125,24 @@ for (const st of demo.stores) {
   creds.push({ key, role: "store_owner", email, password: pinToPassword(st.code, pin), store_code: st.code, pin });
 }
 if (!DRY) writeFileSync(CRED_FILE, JSON.stringify(creds, null, 2));
+}
 console.log(`✓ บัญชีผู้ใช้ ${creds.length} บัญชี → scripts/.demo-credentials.json (ไม่ขึ้น git)`);
 
 const admin = userId.admin;
-await insert("app_user", [{ ...appUsers[0], created_by: admin }]);
-await insert("app_user", appUsers.slice(1).map((u) => ({ ...u, created_by: admin })));
+if (!RESUME) {
+  await insert("app_user", [{ ...appUsers[0], created_by: admin }]);
+  await insert("app_user", appUsers.slice(1).map((u) => ({ ...u, created_by: admin })));
+}
 
 // ---------- 2. จังหวัด ทีม ร้าน ผู้ดูแลร้าน ----------
+const started = bkkDate(-30);
+const storeId: Record<string, string> = RESUME ? await idsByCode("store", "code") : {};
+if (!RESUME) {
 const provinceId = randomUUID();
 const teamId = randomUUID();
-const started = bkkDate(-30);
 await insert("province", [{ id: provinceId, ...demo.province, pilot_status: "active", created_by: admin }]);
 await insert("team", [{ id: teamId, province_id: provinceId, ...demo.team, status: "active", created_by: admin }]);
 
-const storeId: Record<string, string> = {};
 await insert("store", demo.stores.map((st: Row & { code: string }) => {
   storeId[st.code] = randomUUID();
   return {
@@ -127,14 +155,17 @@ await insert("store_assignment", demo.stores.map((st: Row & { code: string; prom
   store_id: storeId[st.code], promoter_user_id: userId[st.promoter], manager_user_id: userId["manager-1"],
   effective_from: started, created_by: admin, approved_by: userId.executive, approved_at: new Date().toISOString(),
 })));
+}
 console.log(`✓ ร้าน ${demo.stores.length} ร้าน`);
 
 // ---------- 3. สินค้า บาร์โค้ด ราคา ----------
 type Sku = { id: string; code: string; units: number; rec: number; ws: number; cost: number; openingUnits: number };
 const skus: Sku[] = [];
 const products: Row[] = [], skuRows: Row[] = [], barcodes: Row[] = [], wholesale: Row[] = [], refs: Row[] = [];
+const existingSku = RESUME ? await idsByCode("sku", "sku_code") : {};
 readCsv(here("./sku-prices.csv")).forEach((r, i) => {
-  const productId = randomUUID(), id = randomUUID();
+  const productId = randomUUID(), id = existingSku[String(r.sku_code)] ?? randomUUID();
+  if (RESUME && !existingSku[String(r.sku_code)]) throw new Error(`ไม่พบ SKU เดิม ${r.sku_code}`);
   const units = Number(r.units_per_pack);
   products.push({ id: productId, name_th: r.name_th, category: r.category, created_by: admin });
   skuRows.push({
@@ -146,7 +177,7 @@ readCsv(here("./sku-prices.csv")).forEach((r, i) => {
     // บาร์โค้ดระดับแพ็กชั่วคราว (PL2-11) · ขึ้นต้น 2000001
     const body = `2000001${String(i + 1).padStart(5, "0")}`;
     const sum = [...body].reduce((a, d, k) => a + Number(d) * (k % 2 ? 3 : 1), 0);
-    barcodes.push({ sku_id: id, barcode: body + ((10 - (sum % 10)) % 10), level: "pack", units_per_level: units, created_by: admin });
+    barcodes.push({ sku_id: id, barcode: body + ((10 - (sum % 10)) % 10), level: "pack", units_per_level: units, verified_from_product: false, created_by: admin });
   }
   wholesale.push({ sku_id: id, price_per_unit: Number(r.wholesale_per_unit), price_includes_vat: null,
     source_note: r.note, effective_from: started, created_by: admin });
@@ -155,8 +186,10 @@ readCsv(here("./sku-prices.csv")).forEach((r, i) => {
   skus.push({ id, code: String(r.sku_code), units, rec: Number(r.recommended_price), ws: Number(r.wholesale_per_unit),
     cost: Number(r.cost_per_unit), openingUnits: Number(r.opening_packs_per_store) * units });
 });
-await insert("product", products);
-await insert("sku", skuRows);
+if (!RESUME) {
+  await insert("product", products);
+  await insert("sku", skuRows);
+}
 await insert("barcode", barcodes);
 await insert("wholesale_price", wholesale);
 await insert("reference_price", refs);
