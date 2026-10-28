@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ONE MART เดโม</string>
+    <string name="title_activity_main">ONE MART เดโม</string>
+    <string name="package_name">com.onemart.eventdemo</string>
+    <string name="custom_url_scheme">com.onemart.eventdemo</string>
+</resources>

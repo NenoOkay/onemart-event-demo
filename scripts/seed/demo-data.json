@@ -1,0 +1,30 @@
+{
+  "_note": "ข้อมูลจำลองเพื่อการสาธิต — ชื่อสมมติทั้งหมด ห้ามใส่ชื่อจังหวัด ทีม ร้าน หรือบุคคลจริง (กติกาข้อ 8)",
+  "province": { "code": "PV-DEMO", "name_th": "จังหวัดตัวอย่าง" },
+  "team": { "code": "T-DEMO-1", "name": "ทีมตัวอย่าง 1" },
+  "stores": [
+    { "code": "S-A", "name": "ร้านตัวอย่าง A", "owner_name": "เจ้าของร้านตัวอย่าง A", "promoter": "promoter-1" },
+    { "code": "S-B", "name": "ร้านตัวอย่าง B", "owner_name": "เจ้าของร้านตัวอย่าง B", "promoter": "promoter-1" },
+    { "code": "S-C", "name": "ร้านตัวอย่าง C", "owner_name": "เจ้าของร้านตัวอย่าง C", "promoter": "promoter-1" },
+    { "code": "S-D", "name": "ร้านตัวอย่าง D", "owner_name": "เจ้าของร้านตัวอย่าง D", "promoter": "promoter-2" },
+    { "code": "S-E", "name": "ร้านตัวอย่าง E", "owner_name": "เจ้าของร้านตัวอย่าง E", "promoter": "promoter-2" }
+  ],
+  "staff": [
+    { "key": "admin", "full_name": "ผู้ดูแลระบบ (เดโม)", "role": "admin" },
+    { "key": "executive", "full_name": "ผู้บริหาร (เดโม · จอทีวี)", "role": "executive" },
+    { "key": "manager-1", "full_name": "ผู้จัดการฝ่ายส่งเสริมตัวอย่าง", "role": "promoter_manager", "contractor_type": "independent_contractor" },
+    { "key": "promoter-1", "full_name": "ผู้ส่งเสริมตัวอย่าง 1", "role": "promoter", "contractor_type": "independent_contractor" },
+    { "key": "promoter-2", "full_name": "ผู้ส่งเสริมตัวอย่าง 2", "role": "promoter", "contractor_type": "independent_contractor" }
+  ],
+  "email_domain": "demo.onemart.invalid",
+  "history": {
+    "_note": "ปริมาณบิลจำลองสำหรับให้ B1 ไม่ว่าง — ไม่ใช่การคาดการณ์ยอดขาย",
+    "days_back": 7,
+    "bills_per_store_per_day": [6, 14],
+    "bills_today_per_store": [1, 3],
+    "lines_per_bill": [1, 4],
+    "qty_per_line": [1, 3],
+    "promptpay_share": 0.3,
+    "random_seed": 101026
+  }
+}
