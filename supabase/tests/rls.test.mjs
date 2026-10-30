@@ -38,9 +38,9 @@ await db.exec(`
     ('${U(5)}','${U(5)}','ผู้จัดการ 1','promoter_manager','${U(1)}');
   insert into province (id, code, name_th, created_by) values ('${U(1)}','PV-X','จังหวัดตัวอย่าง','${U(1)}');
   insert into team (id, province_id, code, name, created_by) values ('${U(1)}','${U(1)}','T-1','ทีมตัวอย่าง 1','${U(1)}');
-  insert into store (id, team_id, province_id, code, name, owner_user_id, owner_name, created_by) values
-    ('a0000000-0000-0000-0000-00000000000a','${U(1)}','${U(1)}','S-A','ร้านตัวอย่าง A','${U(2)}','เจ้าของ A','${U(1)}'),
-    ('b0000000-0000-0000-0000-00000000000b','${U(1)}','${U(1)}','S-B','ร้านตัวอย่าง B','${U(3)}','เจ้าของ B','${U(1)}');
+  insert into store (id, team_id, province_id, code, name, owner_user_id, owner_name, created_by, lifecycle_status) values
+    ('a0000000-0000-0000-0000-00000000000a','${U(1)}','${U(1)}','S-A','ร้านตัวอย่าง A','${U(2)}','เจ้าของ A','${U(1)}','opened'),
+    ('b0000000-0000-0000-0000-00000000000b','${U(1)}','${U(1)}','S-B','ร้านตัวอย่าง B','${U(3)}','เจ้าของ B','${U(1)}','surveyed');
   insert into store_assignment (store_id, promoter_user_id, manager_user_id, effective_from, created_by) values
     ('a0000000-0000-0000-0000-00000000000a','${U(4)}','${U(5)}', current_date - 30, '${U(1)}');
   insert into product (id, name_th, created_by) values ('${U(1)}','น้ำดื่มตัวอย่าง','${U(1)}');
@@ -134,6 +134,16 @@ check("is_test = true ทุกแถว", Number(nt) === 0);
 const au = (await db.query(`select table_name, action, count(*)::int n from audit_log group by 1,2 order by 1,2`)).rows;
 console.log("   audit_log:", au.map((r) => `${r.table_name}:${r.action}=${r.n}`).join(" "));
 check("audit_log บันทึกการปิดราคา", au.some((r) => r.table_name === "store_price" && r.action === "update"));
+
+// 12–13. วันที่ 3: รายชื่อร้านหน้า P1 · สินค้าขายดี
+const loginStores = await as("anon", `select * from pos_login_stores()`);
+check("anon เห็นรายชื่อร้านที่เปิดแล้วเท่านั้น (รหัส+ชื่อ)",
+  loginStores.rows.length === 1 && loginStores.rows[0].code === "S-A" && Object.keys(loginStores.rows[0]).join() === "code,name");
+const best = await as(2, `select store_id, qty_7d from v_best_seller_7d`);
+check("สินค้าขายดีของร้าน A = 2 ชิ้น", best.rows.length === 1 && best.rows[0].qty_7d === 2);
+const bestB = await as(3, `select count(*)::int n from v_best_seller_7d`);
+check("เจ้าของ B ไม่เห็นสินค้าขายดีของร้าน A", bestB.rows[0].n === 0);
+await expectErr("anon อ่าน v_best_seller_7d", () => as("anon", `select * from v_best_seller_7d`));
 
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);
 process.exit(fail ? 1 : 0);

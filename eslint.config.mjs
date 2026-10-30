@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Capacitor Android (ไฟล์ที่ build สร้างเอง)
+    "android/**",
   ]),
 ]);
 
