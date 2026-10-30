@@ -88,7 +88,8 @@ function SaleScreenInner({ ctx }: { ctx: PosContext }) {
           lines={lines}
           totalSatang={total}
           onBack={() => setMode("sale")}
-          onPaid={() => dispatch({ type: "clear" })}
+          // Next เก็บ state ของหน้า /pos ไว้ตอนไปหน้าใบเสร็จ → ต้องกลับเป็นโหมดขาย ไม่งั้นกลับมาเจอหน้ารับเงินค้าง
+          onPaid={() => { dispatch({ type: "clear" }); setMode("sale"); }}
         />
       ) : (
       <>
