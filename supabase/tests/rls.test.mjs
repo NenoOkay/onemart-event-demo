@@ -145,5 +145,25 @@ const bestB = await as(3, `select count(*)::int n from v_best_seller_7d`);
 check("เจ้าของ B ไม่เห็นสินค้าขายดีของร้าน A", bestB.rows[0].n === 0);
 await expectErr("anon อ่าน v_best_seller_7d", () => as("anon", `select * from v_best_seller_7d`));
 
+// 14–19. วันที่ 4: create_pos_sale (ราคาปัจจุบันร้าน A = 8 บาท · สต๊อก 22)
+const rpc = (ext, method, cash, lines) =>
+  `select * from create_pos_sale('${A}', '${ext}', '${method}', ${cash}, '${JSON.stringify(lines)}'::jsonb)`;
+const L3 = [{ sku_id: U(1), qty: 2, barcode: "8850000000001" }, { sku_id: U(1), qty: 1 }]; // รวม SKU ซ้ำ = 3 ชิ้น
+const r14 = await expectOk("เจ้าของ A บันทึกบิลผ่าน RPC", () => as(2, rpc("S-A-TEST-0001", "cash", 50, L3)));
+const s14 = r14?.rows[0];
+check("ยอดคิดจากราคาในฐานข้อมูล 3 × 8 = 24 · ทอน 26", Number(s14?.total_amount) === 24 && Number(s14?.change_amount) === 26 && s14?.created === true);
+const soh14 = (await db.query(`select qty_on_hand from v_stock_on_hand where store_id='${A}'`)).rows[0];
+check("สต๊อกลดจาก 22 เป็น 19", soh14?.qty_on_hand === 19);
+const r15 = await expectOk("ส่งเลขบิลเดิมซ้ำ", () => as(2, rpc("S-A-TEST-0001", "cash", 50, L3)));
+check("ส่งซ้ำได้บิลเดิม ไม่สร้างใหม่", r15?.rows[0].sale_id === s14?.sale_id && r15?.rows[0].created === false);
+const nSales = (await db.query(`select count(*)::int n from pos_sale where external_txn_id = 'S-A-TEST-0001'`)).rows[0].n;
+check("มีบิลเลขนี้ใบเดียว", nSales === 1);
+await expectErr("เงินสดไม่พอถูกปฏิเสธ", () => as(2, rpc("S-A-TEST-0002", "cash", 10, L3)));
+await expectOk("PromptPay ตัวอย่าง ไม่ต้องใส่เงินรับ", () => as(2, rpc("S-A-TEST-0003", "promptpay_demo", "null", [{ sku_id: U(1), qty: 1 }])));
+await expectErr("ฝ่ายส่งเสริมบันทึกบิลผ่าน RPC ไม่ได้", () => as(4, rpc("S-A-TEST-0004", "cash", 50, L3)));
+await expectErr("เจ้าของ B บันทึกบิลร้าน A ไม่ได้", () => as(3, rpc("S-A-TEST-0005", "cash", 50, L3)));
+await expectErr("บิลไม่มีสินค้าถูกปฏิเสธ", () => as(2, rpc("S-A-TEST-0006", "cash", 50, [])));
+await expectErr("anon เรียก RPC ไม่ได้", () => as("anon", rpc("S-A-TEST-0007", "cash", 50, L3)));
+
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);
 process.exit(fail ? 1 : 0);

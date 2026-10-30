@@ -1,40 +1,48 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import {
   cartReducer, lookupBarcode, cartTotalSatang, cartItemCount, lineTotalSatang, formatBaht, searchCatalog,
-  sanitizeStoredCart, type CatalogItem,
+  sanitizeStoredCart, type CatalogItem, type CartLine,
 } from "@/lib/pos/cart";
 import type { PosContext } from "@/lib/pos/catalog";
 import { logout } from "./login/actions";
 import { CameraScanner } from "./CameraScanner";
+import { PayPanel } from "./PayPanel";
 
 type Notice = { kind: "ok" | "warn"; text: string } | null;
 
+const noopSubscribe = () => () => {};
+
+// ตะกร้าอยู่ในเครื่อง (localStorage) จึง render หน้าขายฝั่งเครื่องเท่านั้น — ไม่ต้องรอโหลดใน effect
 export function SaleScreen({ ctx }: { ctx: PosContext }) {
+  const onClient = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  if (!onClient) return <p className="p-4 text-zinc-500">กำลังโหลดหน้าขาย…</p>;
+  return <SaleScreenInner ctx={ctx} />;
+}
+
+function loadCart(key: string, catalog: Map<string, CatalogItem>): CartLine[] {
+  try {
+    return sanitizeStoredCart(JSON.parse(localStorage.getItem(key) ?? "null"), catalog);
+  } catch {
+    return []; // ไม่มีที่เก็บในเครื่อง ใช้ตะกร้าว่าง
+  }
+}
+
+function SaleScreenInner({ ctx }: { ctx: PosContext }) {
   const catalog = useMemo(() => new Map(ctx.items.map((i) => [i.skuId, i])), [ctx.items]);
-  const [lines, dispatch] = useReducer(cartReducer, []);
+  const storageKey = `onemart.cart.${ctx.store.id}`;
+  const [lines, dispatch] = useReducer(cartReducer, null, () => loadCart(storageKey, catalog));
   const [scan, setScan] = useState("");
   const [query, setQuery] = useState("");
   const [camera, setCamera] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
+  const [mode, setMode] = useState<"sale" | "pay">("sale"); // P2 ขาย → P3 รับเงิน
   const scanRef = useRef<HTMLInputElement>(null);
-  const storageKey = `onemart.cart.${ctx.store.id}`;
-  const [hydrated, setHydrated] = useState(false);
-
-  // ตะกร้าอยู่ในเครื่อง — รีโหลดหน้าแล้วไม่หาย · โหลดก่อน แล้วค่อยเริ่มบันทึก (กันตะกร้าว่างเขียนทับ)
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
-      dispatch({ type: "replace", lines: sanitizeStoredCart(saved, catalog) });
-    } catch { /* ไม่มีที่เก็บในเครื่อง ใช้ตะกร้าว่าง */ }
-    setHydrated(true);
-  }, [storageKey, catalog]);
 
   useEffect(() => {
-    if (!hydrated) return;
     try { localStorage.setItem(storageKey, JSON.stringify(lines)); } catch { /* เก็บไม่ได้ก็ใช้ต่อได้ */ }
-  }, [lines, storageKey, hydrated]);
+  }, [lines, storageKey]);
 
   useEffect(() => {
     if (!notice) return;
@@ -74,6 +82,16 @@ export function SaleScreen({ ctx }: { ctx: PosContext }) {
         </form>
       </header>
 
+      {mode === "pay" ? (
+        <PayPanel
+          store={ctx.store}
+          lines={lines}
+          totalSatang={total}
+          onBack={() => setMode("sale")}
+          onPaid={() => dispatch({ type: "clear" })}
+        />
+      ) : (
+      <>
       <section className="flex flex-col gap-2 px-3 pt-3">
         {/* รับรหัสจากเครื่องสแกนในตัว (ส่งมาเหมือนพิมพ์ + Enter) · inputMode none = ไม่เด้งคีย์บอร์ด */}
         <form
@@ -192,14 +210,16 @@ export function SaleScreen({ ctx }: { ctx: PosContext }) {
             <div className="text-4xl font-bold tabular-nums" aria-label="ยอดรวม">{formatBaht(total)}</div>
           </div>
           <button
-            disabled
-            title="หน้ารับเงิน (P3) จะเปิดใช้ในวันที่ 4"
+            disabled={lines.length === 0}
+            onClick={() => { setCamera(false); setMode("pay"); }}
             className="min-h-16 rounded-xl bg-emerald-600 px-6 text-xl font-bold text-white disabled:opacity-40"
           >
             รับเงิน
           </button>
         </div>
       </footer>
+      </>
+      )}
     </main>
   );
 }
