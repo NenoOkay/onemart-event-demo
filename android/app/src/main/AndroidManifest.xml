@@ -41,4 +41,9 @@
     <!-- P2 สแกนบาร์โค้ดด้วยกล้อง (ZXing ใน WebView) -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- Android 11+ ต้องประกาศก่อนจึงเชื่อมบริการเครื่องพิมพ์ในตัว Sunmi ได้ -->
+    <queries>
+        <package android:name="woyou.aidlservice.jiuiv5" />
+    </queries>
 </manifest>
