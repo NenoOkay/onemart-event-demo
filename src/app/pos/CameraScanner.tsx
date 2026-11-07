@@ -4,7 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 
-const SAME_CODE_COOLDOWN_MS = 1500; // กันสแกนซ้ำรหัสเดิมขณะกล้องยังจ่ออยู่
+// รหัสเดิมนับใหม่ได้เมื่อบาร์โค้ดออกจากกล้องไปแล้วนานเท่านี้ (จ่อค้างไว้ = นับครั้งเดียว เหมือนเครื่องยิง)
+const SAME_CODE_REARM_MS = 1000;
+
+// เสียง "ปี๊บ" แบบเครื่องยิงบาร์โค้ด (Web Audio · ไม่ต้องมีไฟล์เสียง)
+function beep(ctx: AudioContext | null) {
+  if (!ctx) return;
+  void ctx.resume();
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.value = 2400;
+  gain.gain.value = 0.15;
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.08);
+}
 
 // สแกนต่อเนื่องด้วยกล้องหลัง จนกว่าจะกดปิด
 export function CameraScanner({ onCode, onClose }: { onCode: (code: string) => void; onClose: () => void }) {
@@ -23,15 +37,19 @@ export function CameraScanner({ onCode, onClose }: { onCode: (code: string) => v
     const reader = new BrowserMultiFormatReader(hints);
     let controls: IScannerControls | undefined;
     let cancelled = false;
-    let last = { code: "", at: 0 };
+    let last = { code: "", seenAt: 0 };
+    let audio: AudioContext | null = null;
+    try { audio = new AudioContext(); } catch { /* ไม่มีเสียงก็ยังสั่นได้ */ }
 
     reader
       .decodeFromConstraints({ video: { facingMode: "environment" } }, videoRef.current!, (result) => {
         if (!result) return;
         const code = result.getText();
         const now = Date.now();
-        if (code === last.code && now - last.at < SAME_CODE_COOLDOWN_MS) return;
-        last = { code, at: now };
+        const held = code === last.code && now - last.seenAt < SAME_CODE_REARM_MS;
+        last = { code, seenAt: now }; // ยังเห็นอยู่ = ต่อเวลาไปเรื่อย ๆ
+        if (held) return;
+        beep(audio);
         navigator.vibrate?.(60);
         onCodeRef.current(code);
       })
@@ -44,6 +62,7 @@ export function CameraScanner({ onCode, onClose }: { onCode: (code: string) => v
     return () => {
       cancelled = true;
       controls?.stop();
+      void audio?.close();
     };
   }, []);
 
