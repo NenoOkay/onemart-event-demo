@@ -13,6 +13,10 @@
     "test": "node --test \"tests/**/*.test.ts\"",
     "barcodes": "node scripts/barcode-sheet.ts"
   },
+  "browserslist": [
+    "chrome >= 91",
+    "last 2 versions and not dead"
+  ],
   "dependencies": {
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
@@ -27,6 +31,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.3",
+    "@csstools/postcss-cascade-layers": "^6.0.2",
     "@electric-sql/pglite": "^0.5.13",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
@@ -34,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "postcss": "^8.5.32",
     "supabase": "^2.122.0",
     "tailwindcss": "^4",
     "typescript": "^5"

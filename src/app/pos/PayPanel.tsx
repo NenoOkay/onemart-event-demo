@@ -133,7 +133,7 @@ export function PayPanel({
           <div className="relative">
             <div className="opacity-60" dangerouslySetInnerHTML={{ __html: qrSvg }} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="rotate-[-12deg] rounded bg-red-600 px-3 py-1 text-lg font-bold text-white shadow">
+              <span className="[transform:rotate(-12deg)] rounded bg-red-600 px-3 py-1 text-lg font-bold text-white shadow">
                 ตัวอย่าง · สแกนจ่ายไม่ได้
               </span>
             </div>
