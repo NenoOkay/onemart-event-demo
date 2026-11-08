@@ -1,9 +1,24 @@
-// B1 ภาพรวมบนทีวี จะสร้างในวันที่ 6
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { TvDashboard, type TvSummary } from "./TvDashboard";
+
+// B1 ภาพรวมบนทีวี — โหลดก้อนแรกฝั่งเซิร์ฟเวอร์ แล้วให้ Client ฟัง Realtime ต่อ
 export default function TvPage() {
   return (
-    <main className="flex flex-1 flex-col gap-4 bg-zinc-950 p-8 text-white">
-      <h1 className="text-4xl font-bold">ONE MART — ภาพรวมวันนี้</h1>
-      <p className="text-xl text-zinc-400">อยู่ระหว่างพัฒนา</p>
-    </main>
+    <Suspense fallback={<main className="flex-1 bg-zinc-950 p-8 text-2xl text-zinc-400">กำลังโหลด…</main>}>
+      <TvLoader />
+    </Suspense>
   );
+}
+
+async function TvLoader() {
+  await connection(); // ยอดสดต่อผู้ใช้ — render ตอนมี request เท่านั้น
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  if (!auth?.claims) redirect("/tv/login");
+
+  const { data } = await supabase.rpc("tv_summary");
+  return <TvDashboard initial={(data as TvSummary | null) ?? null} />;
 }

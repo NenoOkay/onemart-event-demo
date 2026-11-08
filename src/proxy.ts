@@ -9,9 +9,12 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/pos") && pathname !== "/pos/login" && !claims) {
     return NextResponse.redirect(new URL("/pos/login", request.url));
   }
+  if (pathname.startsWith("/tv") && pathname !== "/tv/login" && !claims) {
+    return NextResponse.redirect(new URL("/tv/login", request.url));
+  }
   return response;
 }
 
 export const config = {
-  matcher: ["/pos/:path*"],
+  matcher: ["/pos/:path*", "/tv/:path*"],
 };

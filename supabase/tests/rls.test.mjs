@@ -165,5 +165,19 @@ await expectErr("เจ้าของ B บันทึกบิลร้าน
 await expectErr("บิลไม่มีสินค้าถูกปฏิเสธ", () => as(2, rpc("S-A-TEST-0006", "cash", 50, [])));
 await expectErr("anon เรียก RPC ไม่ได้", () => as("anon", rpc("S-A-TEST-0007", "cash", 50, L3)));
 
+// 20–24. B1 ทีวี: tv_summary() ใช้ RLS ของผู้เรียก
+await db.exec(`insert into auth.users values ('${U(6)}');
+  insert into app_user (id, auth_user_id, full_name, role, created_by) values ('${U(6)}','${U(6)}','ผู้บริหาร','executive','${U(1)}');`);
+const all = (await db.query(`select count(*)::int n, sum(total_amount)::numeric t from pos_sale`)).rows[0];
+const tvExec = (await as(6, `select tv_summary() j`)).rows[0].j;
+check("ผู้บริหารเห็นยอดวันนี้ครบทุกบิล",
+  tvExec.today.bill_count === all.n && Number(tvExec.today.retail_total) === Number(all.t) && tvExec.feed.length === all.n);
+check("ส่งเข้าร้าน 7 วัน = 24 × 5.5 = 132 · วันนี้ = 0",
+  Number(tvExec.week.delivered_wholesale) === 132 && Number(tvExec.today.delivered_wholesale) === 0);
+check("รายชื่อร้านบนทีวีเฉพาะร้านที่เปิดแล้ว", tvExec.stores.length === 1 && tvExec.stores[0].bills_today === all.n);
+const tvB = (await as(3, `select tv_summary() j`)).rows[0].j;
+check("เจ้าของ B เรียก tv_summary ไม่เห็นยอดร้าน A", tvB.today.bill_count === 0 && tvB.feed.length === 0);
+await expectErr("anon เรียก tv_summary ไม่ได้", () => as("anon", `select tv_summary()`));
+
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);
 process.exit(fail ? 1 : 0);
