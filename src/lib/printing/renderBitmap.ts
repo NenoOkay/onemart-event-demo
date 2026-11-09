@@ -4,7 +4,9 @@ import type { ReceiptDoc } from "./PrinterAdapter";
 
 export const PAPER_DOTS = 384;
 const PAD = 4, FONT = 22, FONT_LARGE = 30, LINE = 1.4, DIV_H = 14;
-const font = (px: number, bold?: boolean) => `${bold ? "700 " : ""}${px}px sans-serif`;
+// ทุกบรรทัดใช้ตัวหนา: ตัวปกติบนหัวพิมพ์ความร้อน V2s ทำสระ/วรรณยุกต์ไทยจางหรือขาด (ทดสอบ 9 พ.ย.)
+// บรรทัดที่ bold = หนาพิเศษ (900) ให้ยังแยกออกจากบรรทัดอื่น
+const font = (px: number, bold?: boolean) => `${bold ? "900" : "700"} ${px}px sans-serif`;
 
 export type Measure = (text: string, font: string) => number;
 
