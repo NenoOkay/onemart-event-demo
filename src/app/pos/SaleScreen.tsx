@@ -8,6 +8,7 @@ import {
 import type { PosContext } from "@/lib/pos/catalog";
 import { logout } from "./login/actions";
 import { CameraScanner } from "./CameraScanner";
+import { BrandLogo } from "@/components/BrandLogo";
 import { PayPanel } from "./PayPanel";
 
 type Notice = { kind: "ok" | "warn"; text: string } | null;
@@ -73,9 +74,10 @@ function SaleScreenInner({ ctx }: { ctx: PosContext }) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col">
       <header className="flex items-center justify-between gap-2 border-b border-zinc-200 px-3 py-2">
-        <div className="min-w-0">
+        <BrandLogo className="h-9 shrink-0" />
+        <div className="min-w-0 flex-1">
           <div className="truncate text-lg font-bold">{ctx.store.name}</div>
-          <span className="rounded bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">POS · เฟสถัดไป</span>
+          <span className="rounded bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">POS · เฟสถัดไป</span>
         </div>
         <form action={logout}>
           <button className="min-h-12 px-3 text-sm text-zinc-600">ออกจากระบบ</button>
@@ -116,7 +118,7 @@ function SaleScreenInner({ ctx }: { ctx: PosContext }) {
           <button
             type="button"
             onClick={() => setCamera((c) => !c)}
-            className="min-h-12 rounded-lg bg-zinc-900 px-4 font-semibold text-white"
+            className="min-h-12 rounded-lg bg-brand px-4 font-semibold text-white active:bg-brand-dark"
           >
             {camera ? "ปิดกล้อง" : "กล้อง"}
           </button>
@@ -165,7 +167,7 @@ function SaleScreenInner({ ctx }: { ctx: PosContext }) {
               <button
                 key={id}
                 onClick={() => { addItem(it); scanRef.current?.focus(); }}
-                className="flex min-h-16 flex-col items-center justify-center rounded-lg bg-amber-50 p-1 text-center text-xs leading-tight ring-1 ring-amber-200 active:bg-amber-200"
+                className="flex min-h-16 flex-col items-center justify-center rounded-lg bg-accent-soft p-1 text-center text-xs leading-tight ring-1 ring-accent-line active:bg-accent-line"
               >
                 <span className="line-clamp-2">{it.name}</span>
                 <span className="text-sm font-semibold tabular-nums">{formatBaht(Math.round(it.price * 100))}</span>
@@ -213,7 +215,7 @@ function SaleScreenInner({ ctx }: { ctx: PosContext }) {
           <button
             disabled={lines.length === 0}
             onClick={() => { setCamera(false); setMode("pay"); }}
-            className="min-h-16 rounded-xl bg-emerald-600 px-6 text-xl font-bold text-white disabled:opacity-40"
+            className="min-h-16 rounded-xl bg-brand px-6 text-xl font-bold text-white active:bg-brand-dark disabled:opacity-40"
           >
             รับเงิน
           </button>

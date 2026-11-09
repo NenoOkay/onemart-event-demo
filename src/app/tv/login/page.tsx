@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { loginTv } from "./actions";
 
 export default function TvLoginPage() {
@@ -17,8 +18,9 @@ export default function TvLoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-zinc-950 p-8 text-white">
+    <main className="flex flex-1 items-center justify-center bg-tv-bg p-8 text-white">
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-4">
+        <BrandLogo variant="onDark" className="h-16" />
         <h1 className="text-2xl font-bold">เข้าสู่ระบบจอทีวี</h1>
         <p className="text-zinc-400">บัญชีผู้บริหาร (เดโม)</p>
         <input
@@ -27,12 +29,12 @@ export default function TvLoginPage() {
           value={password}
           onChange={(e) => { setPassword(e.target.value); setError(null); }}
           placeholder="รหัสผ่าน"
-          className="min-h-12 rounded-lg bg-zinc-800 px-4 text-lg outline-none focus:ring-2 focus:ring-sky-500"
+          className="min-h-12 rounded-lg bg-tv-input px-4 text-lg outline-none focus:ring-2 focus:ring-accent"
         />
         <p className="min-h-6 text-red-400" role="alert">{error}</p>
         <button
           disabled={pending || !password}
-          className="min-h-12 rounded-lg bg-sky-600 text-lg font-semibold disabled:opacity-50"
+          className="min-h-12 rounded-lg bg-accent text-lg font-bold text-tv-bg disabled:opacity-50"
         >
           {pending ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
         </button>

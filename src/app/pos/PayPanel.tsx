@@ -79,7 +79,7 @@ export function PayPanel({
   return (
     <section className="flex flex-1 flex-col gap-3 px-3 pb-6 pt-3" aria-label="รับเงิน">
       <div className="flex items-center justify-between">
-        <button onClick={onBack} disabled={saving} className="min-h-12 px-2 text-sky-700">← แก้ตะกร้า</button>
+        <button onClick={onBack} disabled={saving} className="min-h-12 px-2 text-brand">← แก้ตะกร้า</button>
         <span className="text-xs text-zinc-500">{billNo}</span>
       </div>
 
@@ -95,7 +95,7 @@ export function PayPanel({
             role="tab"
             aria-selected={method === m}
             onClick={() => setMethod(m)}
-            className={`min-h-12 rounded-lg font-semibold ${method === m ? "bg-zinc-900 text-white" : "bg-zinc-100"}`}
+            className={`min-h-12 rounded-lg font-semibold ${method === m ? "bg-brand text-white" : "bg-brand-soft text-brand-dark"}`}
           >
             {label}
           </button>
@@ -107,7 +107,7 @@ export function PayPanel({
           <div className="grid grid-cols-3 gap-2">
             {NOTES.map((n) => (
               <button key={n} onClick={() => setReceived((r) => r + toSatang(n))}
-                className="min-h-14 rounded-lg bg-emerald-50 text-xl font-semibold ring-1 ring-emerald-200 active:bg-emerald-200">
+                className="min-h-14 rounded-lg bg-accent-soft text-xl font-semibold ring-1 ring-accent-line active:bg-accent-line">
                 +{n}
               </button>
             ))}
@@ -120,7 +120,7 @@ export function PayPanel({
           </div>
           <div className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2">
             <span className="text-zinc-600">เงินทอน</span>
-            <span className={`text-3xl font-bold tabular-nums ${change < 0 ? "text-zinc-400" : "text-emerald-700"}`}>
+            <span className={`text-3xl font-bold tabular-nums ${change < 0 ? "text-zinc-400" : "text-brand"}`}>
               {change < 0 ? `ขาดอีก ${formatBaht(-change)}` : formatBaht(change)}
             </span>
           </div>
@@ -147,7 +147,7 @@ export function PayPanel({
       <button
         onClick={pay}
         disabled={!canPay || saving}
-        className="mt-auto min-h-16 rounded-xl bg-emerald-600 text-2xl font-bold text-white disabled:opacity-40"
+        className="mt-auto min-h-16 rounded-xl bg-brand text-2xl font-bold text-white active:bg-brand-dark disabled:opacity-40"
       >
         {saving ? "กำลังบันทึก…" : method === "cash" ? "รับเงินแล้ว · ออกใบเสร็จ" : "ได้รับเงินแล้ว"}
       </button>

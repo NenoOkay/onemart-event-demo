@@ -51,7 +51,7 @@ export function LoginForm() {
           <button
             key={s.code}
             onClick={() => setStoreCode(s.code)}
-            className="min-h-14 rounded-lg border border-zinc-300 px-4 text-left text-lg font-semibold active:bg-zinc-100"
+            className="min-h-14 rounded-lg border border-brand-line px-4 text-left text-lg font-semibold active:bg-brand-soft"
           >
             {s.name}
           </button>
@@ -68,7 +68,7 @@ export function LoginForm() {
         <span className="text-lg font-semibold">{storeName}</span>
         <button
           onClick={() => { setStoreCode(null); setPin(""); setError(null); }}
-          className="min-h-12 px-3 text-sky-700"
+          className="min-h-12 px-3 text-brand"
         >
           เปลี่ยนร้าน
         </button>
@@ -76,7 +76,7 @@ export function LoginForm() {
       <p className="text-center text-zinc-600">ใส่ PIN 4 หลัก</p>
       <div className="flex justify-center gap-4" aria-label={`ใส่แล้ว ${pin.length} หลัก`}>
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={`h-5 w-5 rounded-full border-2 border-zinc-700 ${i < pin.length ? "bg-zinc-700" : ""}`} />
+          <span key={i} className={`h-5 w-5 rounded-full border-2 border-brand ${i < pin.length ? "bg-brand" : ""}`} />
         ))}
       </div>
       <p className="min-h-6 text-center text-red-600" role="alert">{pending ? "" : error}</p>
@@ -89,7 +89,7 @@ export function LoginForm() {
               key={i}
               disabled={pending}
               onClick={() => press(k)}
-              className="min-h-16 rounded-xl bg-zinc-100 text-2xl font-semibold active:bg-zinc-300 disabled:opacity-50"
+              className="min-h-16 rounded-xl bg-brand-soft text-2xl font-semibold text-brand-dark active:bg-brand-line disabled:opacity-50"
             >
               {k === "del" ? "ลบ" : k}
             </button>

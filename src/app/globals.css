@@ -11,6 +11,23 @@
   --font-sans: var(--font-noto-thai);
 }
 
+/* สีแบรนด์ ONE MART (EV-12) — แก้สีที่นี่จุดเดียว · ที่มา: public/brand/logo-color.svg
+   ใช้ในคลาส Tailwind เช่น bg-brand · text-brand-dark · bg-accent · bg-tv-bg */
+@theme {
+  --color-brand: #77018d;       /* ม่วงหลัก */
+  --color-brand-dark: #5b006e;  /* ม่วงเข้ม (กดปุ่ม/เงา) */
+  --color-brand-soft: #f4e6f7;  /* ม่วงอ่อน (พื้นป้าย/ปุ่มรอง) */
+  --color-brand-line: #dcb8e3;  /* เส้นขอบม่วงอ่อน */
+  --color-accent: #f7871e;      /* ส้มเข้ม (ปลายไล่เฉด) */
+  --color-accent-light: #fbb03b;/* ส้มอ่อน (ต้นไล่เฉด) */
+  --color-accent-soft: #fff3e0; /* พื้นส้มอ่อน (ปุ่มลัด) */
+  --color-accent-line: #fbd59a; /* เส้นขอบส้มอ่อน */
+  --color-tv-bg: #1f0026;       /* พื้นจอทีวี (ม่วงเกือบดำ) */
+  --color-tv-panel: #33063d;    /* กล่องบนจอทีวี */
+  --color-tv-input: #4a1257;    /* ช่องกรอกบนจอทีวี */
+  --color-tv-flash: #5b006e;    /* กล่องกะพริบเมื่อมีบิลใหม่ */
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

@@ -49,7 +49,7 @@ export function ReceiptView({ receipt, autoPrint }: { receipt: ReceiptSale; auto
           className="min-h-14 rounded-xl bg-zinc-100 text-lg font-semibold active:bg-zinc-300 disabled:opacity-50">
           พิมพ์ซ้ำ
         </button>
-        <Link href="/pos" className="flex min-h-14 items-center justify-center rounded-xl bg-emerald-600 text-lg font-bold text-white">
+        <Link href="/pos" className="flex min-h-14 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
           ขายบิลถัดไป
         </Link>
       </div>
