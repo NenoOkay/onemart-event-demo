@@ -11,7 +11,8 @@
     "seed": "node scripts/seed/seed.ts",
     "test:remote": "node supabase/tests/remote-rls.test.ts",
     "test": "node --test \"tests/**/*.test.ts\"",
-    "barcodes": "node scripts/barcode-sheet.ts"
+    "barcodes": "node scripts/barcode-sheet.ts",
+    "brand-icons": "node scripts/brand-icons.ts"
   },
   "browserslist": [
     "chrome >= 91",
