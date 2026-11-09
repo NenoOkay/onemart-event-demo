@@ -12,8 +12,9 @@
 }
 
 /* สีแบรนด์ ONE MART (EV-12) — แก้สีที่นี่จุดเดียว · ที่มา: public/brand/logo-color.svg
-   ใช้ในคลาส Tailwind เช่น bg-brand · text-brand-dark · bg-accent · bg-tv-bg */
-@theme {
+   ใช้ในคลาส Tailwind เช่น bg-brand · text-brand-dark · bg-accent · bg-tv-bg
+   static = ส่งตัวแปรทุกตัวออกไปเสมอ เพราะสีร้านถูกเรียกแบบ var(--color-store-N) ที่ Tailwind มองไม่เห็น */
+@theme static {
   --color-brand: #77018d;       /* ม่วงหลัก */
   --color-brand-dark: #5b006e;  /* ม่วงเข้ม (กดปุ่ม/เงา) */
   --color-brand-soft: #f4e6f7;  /* ม่วงอ่อน (พื้นป้าย/ปุ่มรอง) */
@@ -22,10 +23,25 @@
   --color-accent-light: #fbb03b;/* ส้มอ่อน (ต้นไล่เฉด) */
   --color-accent-soft: #fff3e0; /* พื้นส้มอ่อน (ปุ่มลัด) */
   --color-accent-line: #fbd59a; /* เส้นขอบส้มอ่อน */
-  --color-tv-bg: #1f0026;       /* พื้นจอทีวี (ม่วงเกือบดำ) */
-  --color-tv-panel: #33063d;    /* กล่องบนจอทีวี */
-  --color-tv-input: #4a1257;    /* ช่องกรอกบนจอทีวี */
-  --color-tv-flash: #5b006e;    /* กล่องกะพริบเมื่อมีบิลใหม่ */
+
+  /* จอทีวี ธีมสว่าง (EV-13) */
+  --color-tv-bg: #ffffff;         /* พื้นจอ (ขาว ให้โลโก้กลืนพื้น) */
+  --color-tv-panel: #faf7fb;      /* กล่องกราฟ/ผัง */
+  --color-tv-muted: #7a5a85;      /* ข้อความรอง */
+  --color-tv-feed: #2b0a35;       /* พื้นแผงบิลล่าสุด (แยกจากภาพรวม) */
+  --color-tv-feed-item: #3a1245;  /* แถวบิล */
+  --color-tv-feed-flash: #6a1f7c; /* แถวบิลใหม่กะพริบ */
+  --color-tv-teal-bg: #e7f6f2;    /* กล่อง "ส่งเข้าร้าน" */
+  --color-tv-teal: #0b5e55;
+  --color-tv-pink-bg: #fdf0f6;    /* กล่อง "ขายปลีกจริง" */
+  --color-tv-pink: #9b1f5a;
+
+  /* สีประจำร้าน — แจกตามลำดับรหัสร้าน (ไม่ผูกชื่อร้าน) · -light ใช้บนพื้นเข้ม */
+  --color-store-1: #77018d; --color-store-1-light: #e9b6f5;
+  --color-store-2: #f7871e; --color-store-2-light: #fbb03b;
+  --color-store-3: #0f9b8e; --color-store-3-light: #5fd8c9;
+  --color-store-4: #d4377e; --color-store-4-light: #f59ac2;
+  --color-store-5: #2a6fdb; --color-store-5-light: #8fb8ff;
 }
 
 body {

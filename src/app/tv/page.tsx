@@ -7,7 +7,7 @@ import { TvDashboard, type TvSummary } from "./TvDashboard";
 // B1 ภาพรวมบนทีวี — โหลดก้อนแรกฝั่งเซิร์ฟเวอร์ แล้วให้ Client ฟัง Realtime ต่อ
 export default function TvPage() {
   return (
-    <Suspense fallback={<main className="flex-1 bg-tv-bg p-8 text-2xl text-zinc-400">กำลังโหลด…</main>}>
+    <Suspense fallback={<main className="flex-1 bg-tv-bg p-8 text-2xl text-tv-muted">กำลังโหลด…</main>}>
       <TvLoader />
     </Suspense>
   );
