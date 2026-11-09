@@ -15,6 +15,9 @@ export type ReceiptSale = {
 
 export const RECEIPT_WIDTH = 32;
 
+// โลโก้ขาวดำหัวใบเสร็จ (EV-12) · สร้างจาก public/brand/logo-mono.svg ขนาดเท่าจุดพิมพ์จริง
+export const RECEIPT_LOGO = { src: "/brand/logo-receipt.png", width: 240, height: 120 } as const;
+
 // สระบน/ล่าง ไม้หันอากาศ และวรรณยุกต์ไทย ไม่กินความกว้างบนกระดาษ
 const THAI_COMBINING = /[ัิ-ฺ็-๎]/;
 
@@ -53,6 +56,7 @@ export function formatThaiDateTime(iso: string): string {
 
 export function buildReceipt(sale: ReceiptSale): ReceiptDoc {
   const lines: ReceiptLine[] = [
+    { kind: "image", ...RECEIPT_LOGO },
     { kind: "text", text: "ใบเสร็จสาธิต", align: "center", bold: true, size: "large" },
     { kind: "text", text: "ข้อมูลจำลองเพื่อการสาธิต", align: "center" },
     { kind: "divider" },
@@ -96,6 +100,7 @@ export function renderText(doc: ReceiptDoc): string[] {
   };
   const out: string[] = [];
   for (const l of doc.lines) {
+    if (l.kind === "image") continue; // ข้อความล้วนไม่มีภาพ
     if (l.kind === "divider") out.push("-".repeat(w));
     else if (l.kind === "feed") for (let i = 0; i < l.lines; i++) out.push("");
     else if (l.kind === "row") out.push(padRow(l.left, l.right, w));
@@ -111,6 +116,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 // HTML สำหรับแสดงตัวอย่างบนจอ และ BrowserPrinter
 export function receiptHtml(doc: ReceiptDoc): string {
   return doc.lines.map((l) => {
+    if (l.kind === "image") return `<img class="rc-img" src="${esc(l.src)}" alt="" style="width:${(l.width / 384) * 48}mm">`;
     if (l.kind === "divider") return `<div class="rc-div"></div>`;
     if (l.kind === "feed") return `<div style="height:${l.lines}em"></div>`;
     const cls = `${"bold" in l && l.bold ? " rc-b" : ""}`;
@@ -123,4 +129,5 @@ export const RECEIPT_CSS = `
 .rc{width:48mm;margin:0 auto;font:12px/1.35 sans-serif;color:#000;background:#fff}
 .rc-row{display:flex;justify-content:space-between;gap:6px}.rc-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rc-row span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.rc-img{display:block;margin:0 auto 4px;height:auto}
 .rc-b{font-weight:700}.rc-l{font-size:16px}.rc-div{border-top:1px dashed #000;margin:4px 0}`;

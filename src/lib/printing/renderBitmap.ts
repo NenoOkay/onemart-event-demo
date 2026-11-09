@@ -10,7 +10,8 @@ export type Measure = (text: string, font: string) => number;
 
 export type DrawOp =
   | { op: "text"; text: string; x: number; y: number; font: string; align: "left" | "right" | "center" }
-  | { op: "line"; y: number };
+  | { op: "line"; y: number }
+  | { op: "image"; src: string; x: number; y: number; width: number; height: number };
 
 // ตัดข้อความให้ไม่เกินความกว้าง (px) แล้วต่อ …
 export function fit(text: string, max: number, f: string, measure: Measure): string {
@@ -28,6 +29,12 @@ export function layoutReceipt(doc: ReceiptDoc, measure: Measure, width = PAPER_D
   for (const l of doc.lines) {
     if (l.kind === "feed") { feedLines += l.lines; continue; }
     if (l.kind === "divider") { ops.push({ op: "line", y: y + DIV_H / 2 }); y += DIV_H; continue; }
+    if (l.kind === "image") {
+      const w = Math.min(l.width, inner), h = Math.round((l.height * w) / l.width);
+      ops.push({ op: "image", src: l.src, x: Math.round((width - w) / 2), y, width: w, height: h });
+      y += h + PAD;
+      continue;
+    }
     const px = l.kind === "text" && l.size === "large" ? FONT_LARGE : FONT;
     const f = font(px, l.bold);
     if (l.kind === "row") {
@@ -44,6 +51,14 @@ export function layoutReceipt(doc: ReceiptDoc, measure: Measure, width = PAPER_D
   return { ops, height: y + PAD, width, feedLines };
 }
 
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`โหลดภาพไม่ได้: ${src}`));
+    img.src = src;
+  });
+
 // คืน PNG แบบ base64 (ไม่มีหัว data:) + จำนวนบรรทัดที่ต้องป้อนกระดาษ
 export async function renderReceiptPng(doc: ReceiptDoc): Promise<{ base64: string; feedLines: number }> {
   await document.fonts?.ready;
@@ -51,6 +66,14 @@ export async function renderReceiptPng(doc: ReceiptDoc): Promise<{ base64: strin
   const ctx = canvas.getContext("2d")!;
   const measure: Measure = (t, f) => { ctx.font = f; return ctx.measureText(t).width; };
   const { ops, height, width, feedLines } = layoutReceipt(doc, measure);
+  // โหลดภาพก่อนวาด · โหลดไม่ได้ (เน็ตหลุด) = ข้ามโลโก้ ใบเสร็จยังพิมพ์ได้
+  const images = new Map<string, HTMLImageElement>();
+  for (const o of ops) {
+    if (o.op === "image" && !images.has(o.src)) {
+      const img = await loadImage(o.src).catch(() => null);
+      if (img) images.set(o.src, img);
+    }
+  }
 
   canvas.width = width;
   canvas.height = height;
@@ -63,6 +86,9 @@ export async function renderReceiptPng(doc: ReceiptDoc): Promise<{ base64: strin
   for (const o of ops) {
     if (o.op === "line") {
       ctx.beginPath(); ctx.moveTo(PAD, o.y); ctx.lineTo(width - PAD, o.y); ctx.stroke();
+    } else if (o.op === "image") {
+      const img = images.get(o.src);
+      if (img) ctx.drawImage(img, o.x, o.y, o.width, o.height);
     } else {
       ctx.font = o.font; ctx.textAlign = o.align; ctx.fillText(o.text, o.x, o.y);
     }

@@ -7,6 +7,7 @@ export type Align = "left" | "center" | "right";
 export type ReceiptLine =
   | { kind: "text"; text: string; align?: Align; bold?: boolean; size?: "normal" | "large" }
   | { kind: "row"; left: string; right: string; bold?: boolean } // ซ้าย-ขวา ในบรรทัดเดียว
+  | { kind: "image"; src: string; width: number; height: number } // ภาพขาวดำ ขนาดเป็นจุดบนกระดาษ (กึ่งกลาง)
   | { kind: "divider" }
   | { kind: "feed"; lines: number };
 

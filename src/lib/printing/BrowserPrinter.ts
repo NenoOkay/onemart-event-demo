@@ -23,7 +23,12 @@ export class BrowserPrinter implements PrinterAdapter {
       @page { size: 58mm auto; margin: 2mm 5mm; } body { margin: 0; } ${RECEIPT_CSS}
     </style></head><body><div class="rc">${receiptHtml(doc)}</div></body></html>`);
     w.document.close();
-    await new Promise((r) => setTimeout(r, 100)); // รอฟอนต์/layout
+    // รอโลโก้โหลด (สูงสุด 2 วินาที) แล้วรอฟอนต์/layout
+    await Promise.race([
+      Promise.all([...w.document.images].map((img) => img.decode().catch(() => {}))),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]);
+    await new Promise((r) => setTimeout(r, 100));
     w.focus();
     w.print();
     setTimeout(() => frame.remove(), 1000);

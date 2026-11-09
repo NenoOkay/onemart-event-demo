@@ -23,9 +23,12 @@ test("ทุกข้อความอยู่ในความกว้า�
   }
 });
 
-test("หัว ใบเสร็จสาธิต อยู่บรรทัดแรก และ feed ไม่ถูกวาดแต่ส่งเป็นจำนวนบรรทัด", () => {
-  const { ops, feedLines, height } = layoutReceipt(buildReceipt(sale), measure);
-  assert.equal(ops[0].op === "text" && ops[0].text, "ใบเสร็จสาธิต");
+test("หัว = โลโก้กึ่งกลาง ตามด้วย ใบเสร็จสาธิต · feed ไม่ถูกวาดแต่ส่งเป็นจำนวนบรรทัด", () => {
+  const { ops, feedLines, height, width } = layoutReceipt(buildReceipt(sale), measure);
+  assert.equal(ops[0].op, "image");
+  if (ops[0].op === "image") assert.equal(ops[0].x * 2 + ops[0].width, width);
+  assert.equal(ops[1].op === "text" && ops[1].text, "ใบเสร็จสาธิต");
+  assert.ok(ops[1].y >= (ops[0].op === "image" ? ops[0].y + ops[0].height : 0), "ข้อความไม่ทับโลโก้");
   assert.equal(feedLines, 3);
   assert.ok(height > 0);
 });
